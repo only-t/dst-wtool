@@ -96,22 +96,75 @@ tiles_base64 = {
 }
 
 
-class App(wx.App):
-    def OnInit(self):
-        print("gdfgdf")
-        icon_frame = wx.Frame(None, -1, title='WTool', size=(640, 480))
-        icon_frame.Show(True)
-        icon_frame.SetIcon(wx.Icon("C:/Users/lukas/OneDrive/Pulpit/funny/t_emotes/t_prof.png"))
+class MainWindow ( wx.Frame ):
+    def __init__(self, parent):
+        wx.Frame.__init__(self, parent, id=wx.ID_ANY, title=wx.EmptyString, pos=wx.DefaultPosition,
+                          size=wx.Size(822, 560), style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
 
-        self.SetTopWindow(icon_frame)
+        self.SetSizeHints(wx.Size(640, 480), wx.DefaultSize)
+        self.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
+        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
 
-        wx.Frame()
+        self.MenuBar = wx.MenuBar(0)
+        self.MenuFile = wx.Menu()
+        self.MenuItemNew = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"New", wx.EmptyString, wx.ITEM_NORMAL)
+        self.MenuFile.Append(self.MenuItemNew)
 
-        return True
+        self.MenuItemOpen = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"Open", wx.EmptyString, wx.ITEM_NORMAL)
+        self.MenuFile.Append(self.MenuItemOpen)
+
+        self.MenuItemSave = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"Save", wx.EmptyString, wx.ITEM_NORMAL)
+        self.MenuFile.Append(self.MenuItemSave)
+
+        self.MenuBar.Append(self.MenuFile, u"File")
+
+        self.MenuGenerate = wx.Menu()
+        self.MenuBar.Append(self.MenuGenerate, u"Generate")
+
+        self.SetMenuBar(self.MenuBar)
+
+        self.ToolBar = self.CreateToolBar(wx.TB_HORIZONTAL, wx.ID_ANY)
+        self.ToolBar.Realize()
+
+        MainSizer = wx.FlexGridSizer(0, 2, 0, 0)
+        MainSizer.AddGrowableCol(0)
+        MainSizer.AddGrowableRow(0)
+        MainSizer.SetFlexibleDirection(wx.BOTH)
+        MainSizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+
+        self.MainWindowSplitter = wx.SplitterWindow(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
+                                                    wx.SP_3D | wx.SP_LIVE_UPDATE)
+        self.MainWindowSplitter.Bind(wx.EVT_IDLE, self.MainWindowSplitterOnIdle)
+        self.MainWindowSplitter.SetMinimumPaneSize(200)
+
+        self.TilesPanel = wx.Panel(self.MainWindowSplitter, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
+                                   wx.TAB_TRAVERSAL)
+        self.TilesPanel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVECAPTION))
+
+        self.OptionsPanel = wx.Panel(self.MainWindowSplitter, wx.ID_ANY, wx.DefaultPosition, wx.Size(350, -1),
+                                     wx.TAB_TRAVERSAL)
+        self.OptionsPanel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
+
+        self.MainWindowSplitter.SplitVertically(self.TilesPanel, self.OptionsPanel, 459)
+        MainSizer.Add(self.MainWindowSplitter, 1, wx.EXPAND, 5)
+
+        self.SetSizer(MainSizer)
+        self.Layout()
+        self.StatusBar = self.CreateStatusBar(1, wx.STB_SIZEGRIP, wx.ID_ANY)
+
+        self.Centre(wx.BOTH)
+
+    def __del__(self):
+        pass
+
+    def MainWindowSplitterOnIdle(self, event):
+        self.MainWindowSplitter.SetSashPosition(459)
+        self.MainWindowSplitter.Unbind(wx.EVT_IDLE)
 
 
 if __name__ == '__main__':
-    main_window = App()
-    main_window.MainLoop()
+    app = wx.App()
+    main_window = MainWindow(None)
+    main_window.Show(True)
 
-# "C:/Users/lukas/OneDrive/Pulpit/funny/t_emotes/t_prof.png"
+    app.MainLoop()
