@@ -1,166 +1,117 @@
-import tkinter as tk
+import wx
 import base64
-from PIL import Image, ImageTk
-from tkinter import filedialog
 
+world_size = 65
 version = "VlJTTgABAAAA"
 tiles_base64 = {
-    "": "impassable",
-    "É‡": "ocean_end",
-    "": "rocky",
+    "255": "INVALID",
+    "1": "IMPASSABLE",
+
+    "2": "ROAD",
+    "3": "ROCKY",
+    "4": "DIRT",
+    "5": "SAVANNA",
+    "6": "GRASS",
+    "7": "FOREST",
+    '8': "MARSH",
+    "9": "WEB",
+    "10": "WOODFLOOR",
+    "11": "CARPET",
+    "12": "CHECKER",
+
+    "13": "CAVE",
+    "14": "FUNGUS",
+    "15": "SINKHOLE",
+    "16": "UNDERROCK",
+    "17": "MUD",
+    "18": "BRICK",
+    "19": "BRICK_GLOW",
+    "20": "TILES",
+    "21": "TILES_GLOW",
+    "22": "TRIM",
+    "23": "TRIM_GLOW",
+    "24": "FUNGUSRED",
+    "25": "FUNGUSGREEN",
+
+    "30": "DECIDUOUS",
+    "31": "DESERT_DIRT",
+    "32": "SCALE",
+
+    "33": "LAVAARENA_FLOOR",
+    "34": "LAVAARENA_TRIM",
+
+    "35": "QUAGMIRE_PEATFOREST",
+    "36": "QUAGMIRE_PARKFIELD",
+    "37": "QUAGMIRE_PARKSTONE",
+    "38": "QUAGMIRE_GATEWAY",
+    "39": "QUAGMIRE_SOIL",
+    "41": "QUAGMIRE_CITYSTONE",
+
+    "42": "PEBBLEBEACH",
+    "43": "METEOR",
+    "44": "SHELLBEACH",
+
+    "45": "ARCHIVE",
+    "46": "FUNGUSMOON",
+
+    "47": "FARMING_SOIL",
+
+    "120": "FUNGUSMOON_NOISE",
+    "121": "METEORMINE_NOISE",
+    "122": "METEORCOAST_NOISE",
+    "123": "DIRT_NOISE",
+    "124": "ABYSS_NOISE",
+    "125": "GROUND_NOISE",
+    "126": "CAVE_NOISE",
+    "127": "FUNGUS_NOISE",
+
+    "128": "UNDERGROUND",
+
+    "129": "WALL_ROCKY",
+    "130": "WALL_DIRT",
+    "131": "WALL_MARSH",
+    "132": "WALL_CAVE",
+    "133": "WALL_FUNGUS",
+    "134": "WALL_SINKHOLE",
+    "135": "WALL_MUD",
+    "136": "WALL_TOP",
+    "137": "WALL_WOOD",
+    "138": "WALL_HUNESTONE",
+    "139": "WALL_HUNESTONE_GLOW",
+    "140": "WALL_STONEEYE",
+    "141": "WALL_STONEEYE_GLOW",
+
+    "200": "FAKE_GROUND",
+
+    "201": "OCEAN_COASTAL",
+    "202": "OCEAN_COASTAL_SHORE",
+    "203": "OCEAN_SWELL",
+    "204": "OCEAN_ROUGH",
+    "205": "OCEAN_BRINEPOOL",
+    "206": "OCEAN_BRINEPOOL_SHORE",
+    "207": "OCEAN_HAZARDOUS",
+    "208": "OCEAN_WATERLOG",
+
+    "247": "OCEAN_END",
 }
 
 
-class MainScreen(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.minsize(640, 480)
-        self.geometry("640x480")
-        self.title("WTool")
-        self.iconphoto(True, tk.PhotoImage(file="C:/Users/lukas/OneDrive/Pulpit/funny/t_emotes/t_prof.png"))
-        self.configure(background="#c9c9c9")
+class App(wx.App):
+    def OnInit(self):
+        print("gdfgdf")
+        icon_frame = wx.Frame(None, -1, title='WTool', size=(640, 480))
+        icon_frame.Show(True)
+        icon_frame.SetIcon(wx.Icon("C:/Users/lukas/OneDrive/Pulpit/funny/t_emotes/t_prof.png"))
 
-        self.mainMenuBar = WindowMenuBar(self)
-        self.config(menu=self.mainMenuBar)
+        self.SetTopWindow(icon_frame)
 
-        self.fileMenu = FileMenu(self.mainMenuBar)
-        self.mainMenuBar.add_cascade(label="File", menu=self.fileMenu)
+        wx.Frame()
 
-        self.topControlPanel = TopPanel(self)
-        self.topControlPanel.grid(row=0, column=0, columnspan=3, sticky="new")
-
-        self.bottomControlPanel = BottomPanel(self)
-        self.bottomControlPanel.grid(row=2, column=0, columnspan=3, sticky="sew")
-
-        self.rightControlPanel = RightPanel(self)
-        self.rightControlPanel.grid(row=1, column=2, sticky="snw")
-
-        self.editingArea = EditingArea(self)
-        self.editingArea.grid(row=1, column=0, sticky="snew")
+        return True
 
 
-class WindowMenuBar(tk.Menu):
-    def __init__(self, parent):
-        super().__init__(parent)
+if __name__ == '__main__':
+    main_window = App()
+    main_window.MainLoop()
 
-
-def start_of_tiles(line):
-    starting_index = 0
-    ending_index = 0
-
-    if line.find("tiles=") >= 0:
-        starting_index = line.find("tiles=") + len("tiles=") + len(version) + 1
-        ending_index = line.find(",") - 1
-
-    return starting_index, ending_index
-
-
-def open_file():
-    file = filedialog.askopenfile()
-
-    if file:
-        for line in file.readlines():
-            if line.find("tiles=") >= 0:
-                starting_index, ending_index = start_of_tiles(line)
-
-                # codedBytes = line[starting_index:ending_index]
-                codedBytes = open("C:/Users/lukas/OneDrive/Pulpit/tiles_encoded.txt", "r").readline()
-                decodedBytes = base64.b64decode(codedBytes)
-                decodedString = str(decodedBytes, "utf-8")
-
-                main_window.editingArea.import_tiles_data(decodedString, 61)
-
-
-class FileMenu(tk.Menu):
-    def __init__(self, parent):
-        super().__init__(parent, tearoff=False)
-        self.add_command(label="New", command=close_program)
-        self.add_command(label="Open", command=open_file)
-        self.add_command(label="Save", command=close_program)
-        self.add_command(label="Save As", command=close_program)
-        self.add_separator()
-        self.add_command(label="Exit", command=close_program)
-
-
-class TopPanel(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, height=50, bg="red")
-
-
-class BottomPanel(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, height=25, bg="green")
-
-
-class RightPanel(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, width=250, bg="#bababa")
-
-
-class EditingArea(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.canvas = tk.Canvas(self, highlightthickness=4, highlightbackground="gray")
-        self.canvas.grid(row=0, column=0, sticky="snew")
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        self.canvas.bind("<ButtonPress-3>", self.scroll_start)
-        self.canvas.bind("<ButtonRelease-3>", self.scroll_stop)
-        self.canvas.bind("<B3-Motion>", self.scroll_move)
-
-        self.empty_label = tk.Label(self, text="Empty", font=("Helvetica", "64"), fg="#e5e5e5")
-        self.empty_label.grid(row=0, column=0)
-
-    def draw_grid(self, tiles, world_size):
-        self.size = world_size
-        self.canvas.tiles = []
-        self.empty_label.destroy()
-
-        self.construct_scrollers()
-
-        for row in range(0, self.size):
-            self.canvas.tiles.append([])
-
-            for column in range(0, self.size):
-                print(str(row*2*self.size + column*2) + " " + str(row*2*self.size + column*2 + 1))
-                tile_name = tiles_base64[tiles[row*2*self.size + column*2] + tiles[row*2*self.size + column*2 + 1]]
-                tile = ImageTk.PhotoImage(Image.open("images/" + tile_name + ".png").resize((50, 50)))
-                self.canvas.create_image(row*50, column*50, image=tile, anchor="nw")
-                self.canvas.tiles[row].append(tile)
-
-    def construct_scrollers(self):
-        self.horizontal_scroll = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-        self.vertical_scroll = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.vertical_scroll.set, xscrollcommand=self.horizontal_scroll.set)
-        self.canvas.configure(scrollregion=(0, 0, self.size*50, self.size*50))
-
-        self.horizontal_scroll.grid(row=1, column=0, sticky="ew")
-        self.vertical_scroll.grid(row=0, column=1, sticky="sn")
-
-    def import_tiles_data(self, tiles_data, world_size):
-        print(tiles_data)
-
-        self.draw_grid(tiles_data, world_size)
-
-    def scroll_start(self, event):
-        self.canvas.configure(cursor="fleur")
-        self.canvas.scan_mark(event.x, event.y)
-
-    def scroll_stop(self, event):
-        self.canvas.configure(cursor="arrow")
-
-    def scroll_move(self, event):
-        self.canvas.scan_dragto(event.x, event.y, gain=1)
-
-
-def close_program():
-    main_window.quit()
-
-
-main_window = MainScreen()
-main_window.rowconfigure(1, weight=1)
-main_window.columnconfigure(0, weight=1)
-
-main_window.mainloop()
+# "C:/Users/lukas/OneDrive/Pulpit/funny/t_emotes/t_prof.png"

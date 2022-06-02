@@ -1,6 +1,6 @@
 import base64
 
-world_size = 61
+world_size = 65
 
 separated = open("C:/Users/lukas/OneDrive/Pulpit/usable_tiles.txt", "r")
 void = separated.readline().strip()
