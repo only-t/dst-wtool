@@ -259,8 +259,8 @@
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
                         <property name="window_style"></property>
-                        <object class="splitteritem" expanded="0">
-                            <object class="wxPanel" expanded="0">
+                        <object class="splitteritem" expanded="1">
+                            <object class="wxPanel" expanded="1">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
                                 <property name="RightDockable">1</property>
@@ -311,10 +311,16 @@
                                 <property name="window_extra_style"></property>
                                 <property name="window_name"></property>
                                 <property name="window_style">wxTAB_TRAVERSAL</property>
+                                <object class="wxBoxSizer" expanded="1">
+                                    <property name="minimum_size">100,100</property>
+                                    <property name="name">TilesSizer</property>
+                                    <property name="orient">wxHORIZONTAL</property>
+                                    <property name="permission">none</property>
+                                </object>
                             </object>
                         </object>
                         <object class="splitteritem" expanded="1">
-                            <object class="wxPanel" expanded="0">
+                            <object class="wxPanel" expanded="1">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
                                 <property name="RightDockable">1</property>
@@ -365,10 +371,10 @@
                                 <property name="window_extra_style"></property>
                                 <property name="window_name"></property>
                                 <property name="window_style">wxTAB_TRAVERSAL</property>
-                                <object class="wxWrapSizer" expanded="0">
+                                <object class="wxWrapSizer" expanded="1">
                                     <property name="flags">wxWRAPSIZER_DEFAULT_FLAGS</property>
                                     <property name="minimum_size"></property>
-                                    <property name="name">wSizer1</property>
+                                    <property name="name">OptionsSizer</property>
                                     <property name="orient">wxHORIZONTAL</property>
                                     <property name="permission">none</property>
                                     <object class="sizeritem" expanded="0">
