@@ -1,7 +1,9 @@
 import wx
 import base64
+import subprocess
 
 world_size = 65
+tiles_index = 33
 version = "VlJTTgABAAAA"
 tiles_base64 = {
     "255": "INVALID",
@@ -96,7 +98,8 @@ tiles_base64 = {
 }
 
 
-class MainWindow ( wx.Frame ):
+class MainWindow(wx.Frame):
+
     def __init__(self, parent):
         wx.Frame.__init__(self, parent, id=wx.ID_ANY, title=wx.EmptyString, pos=wx.DefaultPosition,
                           size=wx.Size(822, 560), style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
@@ -110,7 +113,8 @@ class MainWindow ( wx.Frame ):
         self.MenuItemNew = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"New", wx.EmptyString, wx.ITEM_NORMAL)
         self.MenuFile.Append(self.MenuItemNew)
 
-        self.MenuItemOpen = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"Open", wx.EmptyString, wx.ITEM_NORMAL)
+        self.MenuItemOpen = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"Open",
+                                        u"Open an existing Don't Starve Together world file.", wx.ITEM_NORMAL)
         self.MenuFile.Append(self.MenuItemOpen)
 
         self.MenuItemSave = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"Save", wx.EmptyString, wx.ITEM_NORMAL)
@@ -145,7 +149,77 @@ class MainWindow ( wx.Frame ):
                                      wx.TAB_TRAVERSAL)
         self.OptionsPanel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
 
-        self.MainWindowSplitter.SplitVertically(self.TilesPanel, self.OptionsPanel, 459)
+        wSizer1 = wx.WrapSizer(wx.HORIZONTAL, wx.WRAPSIZER_DEFAULT_FLAGS)
+
+        self.ButtonImpassable = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                          wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonImpassable.SetBitmap(wx.Bitmap(u"images/IMPASSABLE.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonImpassable, 0, 0, 5)
+
+        self.ButtonOceanBrinepool = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                              wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanBrinepool.SetBitmap(wx.Bitmap(u"images/OCEAN_BRINEPOOL.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanBrinepool, 0, 0, 5)
+
+        self.ButtonOceanBrinepoolShore = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                                   wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanBrinepoolShore.SetBitmap(wx.Bitmap(u"images/OCEAN_BRINEPOOL_SHORE.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanBrinepoolShore, 0, 0, 5)
+
+        self.ButtonOceanCoastal = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                            wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanCoastal.SetBitmap(wx.Bitmap(u"images/OCEAN_COASTAL.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanCoastal, 0, 0, 5)
+
+        self.ButtonOceanCoastalShore = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                                 wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanCoastalShore.SetBitmap(wx.Bitmap(u"images/OCEAN_COASTAL_SHORE.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanCoastalShore, 0, 0, 5)
+
+        self.ButtonOceanHazardous = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                              wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanHazardous.SetBitmap(wx.Bitmap(u"images/OCEAN_HAZARDOUS.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanHazardous, 0, 0, 5)
+
+        self.ButtonOceanRough = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                          wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanRough.SetBitmap(wx.Bitmap(u"images/OCEAN_ROUGH.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanRough, 0, 0, 5)
+
+        self.ButtonOceanSwell = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                          wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanSwell.SetBitmap(wx.Bitmap(u"images/OCEAN_SWELL.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanSwell, 0, 0, 5)
+
+        self.ButtonOceanWaterlog = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                             wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonOceanWaterlog.SetBitmap(wx.Bitmap(u"images/OCEAN_WATERLOG.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonOceanWaterlog, 0, 0, 5)
+
+        self.ButtonRoad = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
+                                    wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonRoad.SetBitmap(wx.Bitmap(u"images/ROAD.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonRoad, 0, 0, 5)
+
+        self.ButtonRocky = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
+                                     wx.BORDER_NONE | wx.BU_EXACTFIT)
+
+        self.ButtonRocky.SetBitmap(wx.Bitmap(u"images/ROCKY.png", wx.BITMAP_TYPE_ANY))
+        wSizer1.Add(self.ButtonRocky, 0, 0, 5)
+
+        self.OptionsPanel.SetSizer(wSizer1)
+        self.OptionsPanel.Layout()
+        self.MainWindowSplitter.SplitVertically(self.TilesPanel, self.OptionsPanel, 484)
         MainSizer.Add(self.MainWindowSplitter, 1, wx.EXPAND, 5)
 
         self.SetSizer(MainSizer)
@@ -154,12 +228,31 @@ class MainWindow ( wx.Frame ):
 
         self.Centre(wx.BOTH)
 
+        # Connect Events
+        self.Bind(wx.EVT_MENU, self.OpenFile, id=self.MenuItemOpen.GetId())
+
     def __del__(self):
         pass
 
+    # Virtual event handlers, override them in your derived class
+    def OpenFile(self, event):
+        openFileDialog = wx.FileDialog(self, "Open", "", "", "*.*", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        openFileDialog.ShowModal()
+
+        filepath = openFileDialog.GetPath()
+        file = open(filepath, "r")
+        self.LoadWorldData(file)
+
+        openFileDialog.Destroy()
+
     def MainWindowSplitterOnIdle(self, event):
-        self.MainWindowSplitter.SetSashPosition(459)
+        self.MainWindowSplitter.SetSashPosition(484)
         self.MainWindowSplitter.Unbind(wx.EVT_IDLE)
+
+    def LoadWorldData(self, datafile):
+        for line in datafile.readlines():
+            if line.find("tiles") > 0:
+                ending_index = line.find("\"", tiles_index)
 
 
 if __name__ == '__main__':
