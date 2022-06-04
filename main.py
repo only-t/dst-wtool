@@ -3,9 +3,12 @@ import base64
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas
 
 world_size = 65
+tile_size = 50
+
 tiles_index = 33
 version = "VlJTTgABAAAA"
-tiles_base64 = {
+
+tiles = {
     "255": "INVALID",
     "1": "IMPASSABLE",
 
@@ -99,143 +102,123 @@ tiles_base64 = {
 
 
 class MainWindow ( wx.Frame ):
-    def __init__(self, parent):
-        wx.Frame.__init__(self, parent, id=wx.ID_ANY, title=wx.EmptyString, pos=wx.DefaultPosition,
-                          size=wx.Size(822, 560), style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
+    def __init__( self, parent ):
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 822,560 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
-        self.SetSizeHints(wx.Size(640, 480), wx.DefaultSize)
-        self.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
-        self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
+        self.SetSizeHints( wx.Size( 640,480 ), wx.DefaultSize )
+        self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
+        self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 
-        self.MenuBar = wx.MenuBar(0)
+        self.MenuBar = wx.MenuBar( 0 )
         self.MenuFile = wx.Menu()
-        self.MenuItemNew = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"New", wx.EmptyString, wx.ITEM_NORMAL)
-        self.MenuFile.Append(self.MenuItemNew)
+        self.MenuItemNew = wx.MenuItem( self.MenuFile, wx.ID_ANY, u"New", wx.EmptyString, wx.ITEM_NORMAL )
+        self.MenuFile.Append( self.MenuItemNew )
 
-        self.MenuItemOpen = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"Open",
-                                        u"Open an existing Don't Starve Together world file.", wx.ITEM_NORMAL)
-        self.MenuFile.Append(self.MenuItemOpen)
+        self.MenuItemOpen = wx.MenuItem( self.MenuFile, wx.ID_ANY, u"Open", u"Open an existing Don't Starve Together world file.", wx.ITEM_NORMAL )
+        self.MenuFile.Append( self.MenuItemOpen )
 
-        self.MenuItemSave = wx.MenuItem(self.MenuFile, wx.ID_ANY, u"Save", wx.EmptyString, wx.ITEM_NORMAL)
-        self.MenuFile.Append(self.MenuItemSave)
+        self.MenuItemSave = wx.MenuItem( self.MenuFile, wx.ID_ANY, u"Save", wx.EmptyString, wx.ITEM_NORMAL )
+        self.MenuFile.Append( self.MenuItemSave )
 
-        self.MenuBar.Append(self.MenuFile, u"File")
+        self.MenuBar.Append( self.MenuFile, u"File" )
 
         self.MenuGenerate = wx.Menu()
-        self.MenuBar.Append(self.MenuGenerate, u"Generate")
+        self.MenuBar.Append( self.MenuGenerate, u"Generate" )
 
-        self.SetMenuBar(self.MenuBar)
+        self.SetMenuBar( self.MenuBar )
 
-        self.ToolBar = self.CreateToolBar(wx.TB_HORIZONTAL, wx.ID_ANY)
+        self.ToolBar = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY )
         self.ToolBar.Realize()
 
-        MainSizer = wx.FlexGridSizer(0, 2, 0, 0)
-        MainSizer.AddGrowableCol(0)
-        MainSizer.AddGrowableRow(0)
-        MainSizer.SetFlexibleDirection(wx.BOTH)
-        MainSizer.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+        MainSizer = wx.BoxSizer( wx.VERTICAL )
 
-        self.MainWindowSplitter = wx.SplitterWindow(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
-                                                    wx.SP_3D | wx.SP_LIVE_UPDATE)
-        self.MainWindowSplitter.Bind(wx.EVT_IDLE, self.MainWindowSplitterOnIdle)
-        self.MainWindowSplitter.SetMinimumPaneSize(200)
+        self.MainWindowSplitter = wx.SplitterWindow( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SP_3D|wx.SP_3DBORDER|wx.SP_3DSASH|wx.SP_BORDER|wx.SP_LIVE_UPDATE|wx.SP_NOBORDER|wx.SP_NO_XP_THEME )
+        self.MainWindowSplitter.SetSashGravity(1)
+        self.MainWindowSplitter.Bind( wx.EVT_IDLE, self.MainWindowSplitterOnIdle )
+        self.MainWindowSplitter.SetMinimumPaneSize( 200 )
 
-        self.TilesPanel = wx.Panel(self.MainWindowSplitter, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
-                                   wx.TAB_TRAVERSAL)
-        self.TilesPanel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVECAPTION))
+        self.MainWindowSplitter.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 
-        TilesSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.TilesCanvasPanel = NavCanvas.NavCanvas(self.MainWindowSplitter, BackgroundColor="#bababa", ProjectionFun=None, Debug=0,)
+        self.TilesCanvasPanel.SetMinSize( wx.Size( 300,-1 ) )
 
-        TilesSizer.SetMinSize(wx.Size(100, 100))
+        self.OptionsPanel = wx.Panel( self.MainWindowSplitter, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
+        self.OptionsPanel.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNSHADOW ) )
+        self.OptionsPanel.SetMinSize( wx.Size( 300,-1 ) )
 
-        self.TilesPanel.SetSizer(TilesSizer)
-        self.TilesPanel.Layout()
-        TilesSizer.Fit(self.TilesPanel)
-        self.OptionsPanel = wx.Panel(self.MainWindowSplitter, wx.ID_ANY, wx.DefaultPosition, wx.Size(350, -1),
-                                     wx.TAB_TRAVERSAL)
-        self.OptionsPanel.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
+        OptionsSizer = wx.WrapSizer( wx.HORIZONTAL, wx.WRAPSIZER_DEFAULT_FLAGS )
 
-        OptionsSizer = wx.WrapSizer(wx.HORIZONTAL, wx.WRAPSIZER_DEFAULT_FLAGS)
+        self.ButtonImpassable = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonImpassable = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                          wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonImpassable.SetBitmap( wx.Bitmap( u"images/IMPASSABLE.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonImpassable, 0, 0, 5 )
 
-        self.ButtonImpassable.SetBitmap(wx.Bitmap(u"images/IMPASSABLE.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonImpassable, 0, 0, 5)
+        self.ButtonOceanBrinepool = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanBrinepool = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                              wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanBrinepool.SetBitmap( wx.Bitmap( u"images/OCEAN_BRINEPOOL.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanBrinepool, 0, 0, 5 )
 
-        self.ButtonOceanBrinepool.SetBitmap(wx.Bitmap(u"images/OCEAN_BRINEPOOL.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanBrinepool, 0, 0, 5)
+        self.ButtonOceanBrinepoolShore = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanBrinepoolShore = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                                   wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanBrinepoolShore.SetBitmap( wx.Bitmap( u"images/OCEAN_BRINEPOOL_SHORE.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanBrinepoolShore, 0, 0, 5 )
 
-        self.ButtonOceanBrinepoolShore.SetBitmap(wx.Bitmap(u"images/OCEAN_BRINEPOOL_SHORE.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanBrinepoolShore, 0, 0, 5)
+        self.ButtonOceanCoastal = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanCoastal = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                            wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanCoastal.SetBitmap( wx.Bitmap( u"images/OCEAN_COASTAL.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanCoastal, 0, 0, 5 )
 
-        self.ButtonOceanCoastal.SetBitmap(wx.Bitmap(u"images/OCEAN_COASTAL.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanCoastal, 0, 0, 5)
+        self.ButtonOceanCoastalShore = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanCoastalShore = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                                 wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanCoastalShore.SetBitmap( wx.Bitmap( u"images/OCEAN_COASTAL_SHORE.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanCoastalShore, 0, 0, 5 )
 
-        self.ButtonOceanCoastalShore.SetBitmap(wx.Bitmap(u"images/OCEAN_COASTAL_SHORE.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanCoastalShore, 0, 0, 5)
+        self.ButtonOceanHazardous = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanHazardous = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                              wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanHazardous.SetBitmap( wx.Bitmap( u"images/OCEAN_HAZARDOUS.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanHazardous, 0, 0, 5 )
 
-        self.ButtonOceanHazardous.SetBitmap(wx.Bitmap(u"images/OCEAN_HAZARDOUS.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanHazardous, 0, 0, 5)
+        self.ButtonOceanRough = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanRough = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                          wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanRough.SetBitmap( wx.Bitmap( u"images/OCEAN_ROUGH.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanRough, 0, 0, 5 )
 
-        self.ButtonOceanRough.SetBitmap(wx.Bitmap(u"images/OCEAN_ROUGH.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanRough, 0, 0, 5)
+        self.ButtonOceanSwell = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanSwell = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                          wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanSwell.SetBitmap( wx.Bitmap( u"images/OCEAN_SWELL.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanSwell, 0, 0, 5 )
 
-        self.ButtonOceanSwell.SetBitmap(wx.Bitmap(u"images/OCEAN_SWELL.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanSwell, 0, 0, 5)
+        self.ButtonOceanWaterlog = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonOceanWaterlog = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
-                                             wx.DefaultSize, wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonOceanWaterlog.SetBitmap( wx.Bitmap( u"images/OCEAN_WATERLOG.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonOceanWaterlog, 0, 0, 5 )
 
-        self.ButtonOceanWaterlog.SetBitmap(wx.Bitmap(u"images/OCEAN_WATERLOG.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonOceanWaterlog, 0, 0, 5)
+        self.ButtonRoad = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonRoad = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
-                                    wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonRoad.SetBitmap( wx.Bitmap( u"images/ROAD.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonRoad, 0, 0, 5 )
 
-        self.ButtonRoad.SetBitmap(wx.Bitmap(u"images/ROAD.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonRoad, 0, 0, 5)
+        self.ButtonRocky = wx.Button( self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.BORDER_NONE|wx.BU_EXACTFIT )
 
-        self.ButtonRocky = wx.Button(self.OptionsPanel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
-                                     wx.BORDER_NONE | wx.BU_EXACTFIT)
+        self.ButtonRocky.SetBitmap( wx.Bitmap( u"images/ROCKY.png", wx.BITMAP_TYPE_ANY ) )
+        OptionsSizer.Add( self.ButtonRocky, 0, 0, 5 )
 
-        self.ButtonRocky.SetBitmap(wx.Bitmap(u"images/ROCKY.png", wx.BITMAP_TYPE_ANY))
-        OptionsSizer.Add(self.ButtonRocky, 0, 0, 5)
 
-        self.OptionsPanel.SetSizer(OptionsSizer)
+        self.OptionsPanel.SetSizer( OptionsSizer )
         self.OptionsPanel.Layout()
-        self.MainWindowSplitter.SplitVertically(self.TilesPanel, self.OptionsPanel, 484)
-        MainSizer.Add(self.MainWindowSplitter, 1, wx.EXPAND, 5)
+        OptionsSizer.Fit( self.OptionsPanel )
+        self.MainWindowSplitter.SplitVertically( self.TilesCanvasPanel, self.OptionsPanel, 604 )
+        MainSizer.Add( self.MainWindowSplitter, 1, wx.EXPAND, 5 )
 
-        self.SetSizer(MainSizer)
+
+        self.SetSizer( MainSizer )
         self.Layout()
-        self.StatusBar = self.CreateStatusBar(1, wx.STB_SIZEGRIP, wx.ID_ANY)
+        self.StatusBar = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
 
-        self.Centre(wx.BOTH)
+        self.Centre( wx.BOTH )
 
         # Connect Events
-        self.Bind(wx.EVT_MENU, self.OpenFile, id=self.MenuItemOpen.GetId())
+        self.Bind( wx.EVT_MENU, self.OpenFile, id = self.MenuItemOpen.GetId() )
 
     def __del__(self):
         pass
@@ -267,10 +250,21 @@ class MainWindow ( wx.Frame ):
 
         self.GenerateTiles()
 
-    def GenerateTiles(self):
-        self.tiles_canvas = NavCanvas.NavCanvas(self.TilesPanel, size=(500, 500)).Canvas
+    def FindTileImage(self, id):
+        return tiles[id]
 
-        print(self.tiles_data)
+    def GenerateTiles(self):
+        self.TilesCanvasPanel.Canvas
+        index = 0
+        for byte in self.tiles_data:
+            if index%2 == 0: # For some reason it should only check for every other byte, idk that's how the map data works i guess...
+                x = tile_size*((index//2)%world_size)
+                y = tile_size*((index//2)//world_size)
+                self.TilesCanvasPanel.Canvas.AddObject(FloatCanvas.ScaledBitmap(wx.Bitmap("images/"+self.FindTileImage(str(byte))+".png"), (x, y), 50))
+
+            index += 1
+
+        self.TilesCanvasPanel.Canvas.Draw()
 
 
 if __name__ == '__main__':
